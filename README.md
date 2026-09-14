@@ -149,6 +149,70 @@ Settling it needs an intervention rather than more observation: turn the block o
 for a comparable window and see whether the modelless rate climbs back. That is
 worth doing before anyone believes either version.
 
+## Update, 2026-09-14: I turned the block off
+
+On 2026-08-14 I replaced the block with a silent default. Any dispatch with no model
+now gets `sonnet` injected, and every dispatch is logged. The model never sees a
+message, so there is nothing to learn from. If the block had built a habit, the
+habit should outlast it. If it was only correcting sessions as they ran, the
+modelless rate should climb.
+
+It climbed.
+
+A fair comparison needs the same parent model on both sides, and the table above
+does not have that. The parent switched from Opus 4.8 to Opus 5 on July 25 to 26,
+two days before the halfway line, which I missed the first time. So the figures
+below are main-session dispatches under Opus 5 only, leaving out agent types where
+there is no choice to make. Forks are also left out: they always run on the
+parent's model and ignore the override, and they barely existed before.
+
+| | Dispatches | Arrived modelless |
+|---|---|---|
+| Block on, Jul 26 to Aug 12 | 203 | 10.3% |
+| Block off, Aug 15 to Sep 14 | 668 | 32.5% |
+
+The more telling cut is inside a session. I split sessions by whether their first
+dispatch arrived without a model, then counted the dispatches that came after it.
+Parallel calls from the same turn are grouped, so a burst of five counts once.
+
+| First dispatch | Later bursts modelless, block on | Block off |
+|---|---|---|
+| Had no model | 1 of 38 (3%) | 82 of 165 (50%) |
+| Had a model | 1 of 53 (2%) | 14 of 146 (10%) |
+
+The block did not make sessions start better. The first dispatch arrived modelless
+in 15 of 38 sessions with it on and 50 of 91 with it off, and at those sample sizes
+the difference is weak. What the block did was stop a session repeating the
+omission after being told once. Without it, a session that starts without a model
+leaves it off half the time from then on.
+
+So the answer to the question above is no. The block did not train anything that
+lasted beyond the session. It corrected each session live, and the decline in the
+first table was partly that and partly the model switch.
+
+Two things make this less tidy.
+
+**The rate did not stay up.** Broken down by Claude Code version, it fell across
+the month: 56% on 2.1.241 and earlier (Aug 15 to 24), 34% on 2.1.243 to 2.1.251,
+and 13% from 2.1.263 on (Sep 7 to 14). That is back at the block-on level, with no
+block. I do not know why. I checked the Agent tool's model wording in the 2.1.251
+and 2.1.263 binaries and found no relevant change, but prompt text served remotely
+would not show up there. In late August I also added notes to my own skills telling
+the model to always set one. And a handful of sessions a day is a small sample, so
+daily figures swing hard. I am leaving the log running for another month.
+
+**Version is a total confound.** Every block-on dispatch ran on an older Claude
+Code build than every block-off dispatch. Nothing here separates "block removed"
+from the dozens of other releases in between. The within-session split shows what
+the block was doing while it ran. Whether its absence is what raised the rate
+afterwards is exactly what the version confound leaves open.
+
+A second reader re-derived these numbers from the raw transcripts with separate
+scripts before seeing mine. The same-model rates matched to within one dispatch.
+One figure did not reproduce: the Opus 4.8 first-half rate comes out anywhere from
+23% to 28% depending on how blocked retries are collapsed, which is why none of
+the tables above depend on it.
+
 ## What I would do now
 
 Downgrade the block to a backstop. On second-half numbers it fires on about 15% of
@@ -327,9 +391,10 @@ have made 99 times out of 100.
 
 - **One person, one workload, 30 days, no control group.** The 82.7% voluntary rate
   is my sessions, not a benchmark.
-- **The causal claim is unproven and I have flagged it as such.** The trend is
-  consistent with the block training the behaviour and equally consistent with the
-  task mix changing.
+- **The training question now has an answer, but not a clean causal one.** Turning
+  the block off answered "did it train anything durable" (no). The block-off month
+  also ran on newer Claude Code builds than the block-on month, with no overlap, so
+  the hook change and everything else in those releases cannot be separated.
 - **I have not shown that a classifier would do worse than the model's own
   judgment.** My objection to prompt-string classification is that a classifier sees
   the prompt but not why the parent chose to delegate. That is reasoning, not
